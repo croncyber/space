@@ -11,13 +11,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 
-@Controller
+@RestController
 @RequestMapping("/rest")
 public class ShipController {
     private final Logger logger = LoggerFactory.getLogger(ShipController.class);
@@ -81,7 +80,6 @@ public class ShipController {
                 .and(shipService.filterBySpeed(minSpeed, maxSpeed))
                 .and(shipService.filterByCrewSize(minCrewSize, maxCrewSize))
                 .and(shipService.filterByRating(minRating, maxRating))).size();
-
     }
 
 
@@ -89,7 +87,10 @@ public class ShipController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Ship createShip(@RequestBody Ship ship) {
-        return shipService.createShip(ship);
+        logger.info("Creating ship: " + ship);
+        shipService.createShip(ship);
+        logger.info("Ship created successfully with info: "+ ship);
+        return ship;
     }
 
     @GetMapping(value = "ships/{id}")
@@ -104,13 +105,18 @@ public class ShipController {
     @ResponseStatus(HttpStatus.OK)
     public void deleteShip(@PathVariable(value = "id") String id) {
         Long idLong = Long.parseLong(id);
+        logger.info("Deleting ship with id: "+ idLong);
         shipService.deleteShip(idLong);
+        logger.info("Ship deleted successfully");
     }
 
     @PostMapping(value = "ships/{id}")
     public Ship updateShip(@PathVariable(value = "id") String id, @RequestBody Ship ship) {
+        logger.info("Updating ship: " + ship);
         Long idLong = Long.parseLong(id);
-        return shipService.updateShip(idLong, ship);
+        shipService.updateShip(idLong, ship);
+        logger.info("Ship with id:"+idLong+" updated successfully with info: " + ship);
+        return ship;
     }
 
 
