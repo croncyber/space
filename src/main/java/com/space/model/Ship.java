@@ -2,6 +2,7 @@ package com.space.model;
 
 import javax.persistence.*;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -22,7 +23,7 @@ public class Ship {
     private ShipType shipType;
     @Temporal(TemporalType.DATE)
     @Column(name = "PROD_DATE")
-    private Long prodDate;
+    private Date prodDate;
     @Column(name = "IS_USED")
     private Boolean isUsed;
     @Column(name = "CREW_SIZE")
@@ -57,27 +58,10 @@ public class Ship {
 //        this.rating = rating;
 //    }
 
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Ship that = (Ship) o;
-        Calendar calendarThis = Calendar.getInstance();
-        calendarThis.setTimeInMillis(prodDate);
-        int prodYearThis = calendarThis.get(Calendar.YEAR);
-        Calendar calendarThat = Calendar.getInstance();
-        calendarThat.setTimeInMillis(that.prodDate);
-        int prodYearThat = calendarThat.get(Calendar.YEAR);
-        return Objects.equals(id, that.id) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(planet, that.planet) &&
-                shipType == that.shipType &&
-                Objects.equals(prodYearThis, prodYearThat) &&
-                Objects.equals(isUsed, that.isUsed) &&
-                Objects.equals(speed, that.speed) &&
-                Objects.equals(crewSize, that.crewSize) &&
-                Objects.equals(rating, that.rating);
-        Math.
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 
     @Override
@@ -106,7 +90,7 @@ public class Ship {
         return shipType;
     }
 
-    public Long getProdDate() {
+    public Date getProdDate() {
         return prodDate;
     }
 
@@ -145,7 +129,7 @@ public class Ship {
         this.shipType = shipType;
     }
 
-    public void setProdDate(Long prodDate) {
+    public void setProdDate(Date prodDate) {
         this.prodDate = prodDate;
     }
 

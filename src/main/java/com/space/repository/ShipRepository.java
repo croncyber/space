@@ -2,33 +2,9 @@ package com.space.repository;
 
 
 import com.space.model.Ship;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface ShipRepository extends CrudRepository<Ship, Long> {
-
-    //Get ships list
-    @Override
-    List<Ship> findAll();
-
-    //Get ships count
-    @Override
-    long count();
-
-    //Create ship
-    @Override
-    <S extends Ship> S save(S entity);
-
-    //Get ship
-    @Override
-    Optional<Ship> findById(Long aLong);
-
-    //Update ship
-
-
-    //Delete ship
-    @Override
-    void deleteById(Long aLong);
+// https://spring.io/blog/2011/04/26/advanced-spring-data-jpa-specifications-and-querydsl/
+public interface ShipRepository extends JpaRepository<Ship, Long>, JpaSpecificationExecutor<Ship> {
 }
