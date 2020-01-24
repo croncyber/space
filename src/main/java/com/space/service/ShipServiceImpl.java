@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -62,14 +61,22 @@ public class ShipServiceImpl implements ShipService {
     @Override
     public Ship createShip(Ship ship) {
         // проверка параметров
+        if (ship.getName() == null
+                || ship.getPlanet() == null
+                || ship.getShipType() == null
+                || ship.getProdDate() == null
+                || ship.getSpeed() == null
+                || ship.getCrewSize() == null)
+            throw new BadRequestException("One of Ship params is null");
+
         checkShipParams(ship);
-        // проверка на использованый / новый
-        if (ship.getUsed() == null) {
+
+        if (ship.getUsed() == null)
             ship.setUsed(false);
-        }
-        // подсчет рейтинга
+
         Double rating = calculateRating(ship);
         ship.setRating(rating);
+
 
         return shipRepository.saveAndFlush(ship);
     }
