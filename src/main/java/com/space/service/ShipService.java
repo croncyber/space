@@ -9,9 +9,9 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface ShipService {
-    List<Ship> getAllShips(Specification<Ship> shipSpecification);
+    Page<Ship> getAllShips(Specification<Ship> specification, Pageable sortedByName);
 
-    Page<Ship> getAllShips(Specification<Ship> shipSpecification, Pageable sort);
+    List<Ship> getAllShips(Specification<Ship> specification);
 
     Ship createShip(Ship ship);
 

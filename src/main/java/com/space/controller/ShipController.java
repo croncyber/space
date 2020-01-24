@@ -92,8 +92,6 @@ public class ShipController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Ship createShip(@RequestBody Ship ship) {
-        logger.info("Creating ship: " + ship);
-        logger.info("Ship created successfully with info: " + ship);
         return  shipService.createShip(ship);
     }
 
@@ -109,19 +107,19 @@ public class ShipController {
     @ResponseStatus(HttpStatus.OK)
     public void deleteShip(@PathVariable(value = "id") String id) {
         Long idLong = shipService.findId(id);
-        logger.info("Deleting ship with id: " + idLong);
         shipService.deleteShip(idLong);
-        logger.info("Ship deleted successfully");
     }
 
-    @PostMapping(value = "ships/{id}")
+    @PostMapping(value = "/ships/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
     public Ship updateShip(@PathVariable(value = "id") String id, @RequestBody Ship ship) {
-        logger.info("Updating ship: " + ship);
-        Long idLong = shipService.findId(id);
-        logger.info("Ship with id:" + idLong + " updated successfully with info: " + ship);
-        return shipService.updateShip(idLong, ship);
+
+        Long longId = shipService.findId(id);
+
+        return shipService.updateShip(longId, ship);
     }
+
 
 
 }
