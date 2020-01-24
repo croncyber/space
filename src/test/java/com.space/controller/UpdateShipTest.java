@@ -139,7 +139,7 @@ public class UpdateShipTest {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .content("{}"))
-                .andExpect(status().isOk());
+                  .andExpect(status().isOk());
 
         String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
         ShipInfoTest actual = mapper.readValue(contentAsString, ShipInfoTest.class);
