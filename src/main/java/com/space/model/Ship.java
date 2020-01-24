@@ -2,15 +2,14 @@ package com.space.model;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.Objects;
 
 
 @Entity
 @Table(name = "ship")
 public class Ship {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "name")
     private String name;
@@ -19,7 +18,6 @@ public class Ship {
     @Enumerated(EnumType.STRING)
     @Column(name = "shipType")
     private ShipType shipType;
-    @Temporal(TemporalType.DATE)
     @Column(name = "prodDate")
     private Date prodDate;
     @Column(name = "isUsed")
@@ -32,21 +30,6 @@ public class Ship {
     private Double speed;
 
 
-
-//    @Override
-//    public boolean equals(Object obj) {
-//        return super.equals(obj);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id, name, planet, shipType, prodDate, isUsed, speed, crewSize, rating);
-//    }
-
-    @Override
-    public String toString() {
-        return String.format("Department - Id: %d, Name: %s", id, name);
-    }
 
     public Long getId() {
         return id;

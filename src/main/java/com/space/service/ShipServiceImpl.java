@@ -1,11 +1,11 @@
 package com.space.service;
 
 
+import com.space.exception.BadRequestException;
+import com.space.exception.ShipNotFoundException;
 import com.space.model.Ship;
 import com.space.model.ShipType;
 import com.space.repository.ShipRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,25 +19,26 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-@Service("shipService")
+@Service
 @Transactional
 public class ShipServiceImpl implements ShipService {
 
-    Logger logger = LoggerFactory.getLogger(ShipServiceImpl.class);
 
     @Autowired
     private ShipRepository shipRepository;
 
     // список всех сущестующих кораблей
-    @Override
-    public List<Ship> getAllShips(Specification<Ship> shipSpecification) {
-        return shipRepository.findAll();
-    }
 
     @Override
     public Page<Ship> getAllShips(Specification<Ship> shipSpecification, Pageable sort) {
-        return null;
+        return shipRepository.findAll(shipSpecification, sort);
     }
+
+    @Override
+    public List<Ship> getAllShips(Specification<Ship> shipSpecification) {
+        return shipRepository.findAll(shipSpecification);
+    }
+
 
     // подсчет рейтинга
     private Double calculateRating(Ship ship) {
@@ -56,6 +57,8 @@ public class ShipServiceImpl implements ShipService {
     // создать новый корабль
     @Override
     public Ship createShip(Ship ship) {
+        // проверка параметров
+        checkShipParams(ship);
         // проверка на использованый / новый
         if (ship.getUsed() == null) {
             ship.setUsed(false);
@@ -70,33 +73,38 @@ public class ShipServiceImpl implements ShipService {
     // проверка характеристик корабля
     private void checkShipParams(Ship ship) {
         if (ship.getName() != null && (ship.getName().length() < 1 || ship.getName().length() > 50))
-            logger.error("Incorrect Ship.name");
+            throw new BadRequestException("Incorrect Ship.name");
 
         if (ship.getPlanet() != null && (ship.getPlanet().length() < 1 || ship.getPlanet().length() > 50))
-            logger.error("Incorrect Ship.planet");
+            throw new BadRequestException("Incorrect Ship.planet");
 
         if (ship.getCrewSize() != null && (ship.getCrewSize() < 1 || ship.getCrewSize() > 9999))
-            logger.error("Incorrect Ship.crewSize");
+            throw new BadRequestException("Incorrect Ship.crewSize");
 
+        if (ship.getSpeed() == null) {
+            throw new BadRequestException("Incorrect Ship.speed");
+        }
         if (ship.getSpeed() != null && (ship.getSpeed() < 0.01D || ship.getSpeed() > 0.99D))
-            logger.error("Incorrect Ship.speed");
+            throw new BadRequestException("Incorrect Ship.speed");
 
         if (ship.getProdDate() != null) {
             Calendar cal = Calendar.getInstance();
             cal.setTime(ship.getProdDate());
             if (cal.get(Calendar.YEAR) < 2800 || cal.get(Calendar.YEAR) > 3019)
-                logger.error("Incorrect Ship.date");
+                throw new BadRequestException("Incorrect Ship.date");
         }
     }
 
     // редактирование характеристик корабля
     @Override
     public Ship updateShip(Long id, Ship ship) {
-        if (!shipRepository.existsById(id)) {
-            logger.error("Ship not found");
-        }
         // проверка характеристик корабля
         checkShipParams(ship);
+
+        if (!shipRepository.existsById(id)) {
+            throw new ShipNotFoundException("Ship not found");
+        }
+
 
         Ship updateShip = shipRepository.findById(id).get();
 
@@ -132,34 +140,29 @@ public class ShipServiceImpl implements ShipService {
     // получение корабля по id
     @Override
     public Ship getShip(Long id) {
-        if (!shipRepository.existsById(id)) {
-            logger.error("Ship not found");
-        }
+        if (!shipRepository.existsById(id))
+            throw new ShipNotFoundException("Ship not found");
+
         return shipRepository.findById(id).get();
     }
 
     @Override
     public void deleteShip(Long id) {
-        if (!shipRepository.existsById(id)) {
-            logger.error("Ship not found");
-        } else shipRepository.deleteById(id);
+        if (shipRepository.existsById(id))
+            shipRepository.deleteById(id);
+        else throw new ShipNotFoundException("Ship not found");
     }
 
     @Override
     public Long findId(String id) {
-        Long longId = null;
         if (id == null || id.equals("") || id.equals("0"))
-            logger.error("ID is invalid");
-
+            throw new BadRequestException("ID is invalid");
         try {
-            assert id != null;
-            longId = Long.parseLong(id);
+            Long longId = Long.parseLong(id);
             return longId;
         } catch (NumberFormatException e) {
-            logger.error("ID isn't number", e);
+            throw new BadRequestException("ID isn't number", e);
         }
-        return longId;
-
     }
 
     @Override
@@ -208,44 +211,44 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public Specification<Ship> filterBySpeed(Double minSpeed, Double maxSpeed) {
+    public Specification<Ship> filterBySpeed(Double min, Double max) {
         return (root, query, cb) -> {
-            if (minSpeed == null && maxSpeed == null)
+            if (min == null && max == null)
                 return null;
-            if (minSpeed == null)
-                return cb.lessThanOrEqualTo(root.get("speed"), maxSpeed);
-            if (maxSpeed == null)
-                return cb.greaterThanOrEqualTo(root.get("speed"), minSpeed);
+            if (min == null)
+                return cb.lessThanOrEqualTo(root.get("speed"), max);
+            if (max == null)
+                return cb.greaterThanOrEqualTo(root.get("speed"), min);
 
-            return cb.between(root.get("speed"), minSpeed, maxSpeed);
+            return cb.between(root.get("speed"), min, max);
         };
     }
 
     @Override
-    public Specification<Ship> filterByCrewSize(Integer minSize, Integer maxSize) {
+    public Specification<Ship> filterByCrewSize(Integer min, Integer max) {
         return (root, query, cb) -> {
-            if (minSize == null && maxSize == null)
+            if (min == null && max == null)
                 return null;
-            if (minSize == null)
-                return cb.lessThanOrEqualTo(root.get("crewSize"), maxSize);
-            if (maxSize == null)
-                return cb.greaterThanOrEqualTo(root.get("crewSize"), minSize);
+            if (min == null)
+                return cb.lessThanOrEqualTo(root.get("crewSize"), max);
+            if (max == null)
+                return cb.greaterThanOrEqualTo(root.get("crewSize"), min);
 
-            return cb.between(root.get("crewSize"), minSize, maxSize);
+            return cb.between(root.get("crewSize"), min, max);
         };
     }
 
     @Override
-    public Specification<Ship> filterByRating(Double minRating, Double maxRating) {
+    public Specification<Ship> filterByRating(Double min, Double max) {
         return (root, query, cb) -> {
-            if (minRating == null && maxRating == null)
+            if (min == null && max == null)
                 return null;
-            if (minRating == null)
-                return cb.lessThanOrEqualTo(root.get("rating"), maxRating);
-            if (maxRating == null)
-                return cb.greaterThanOrEqualTo(root.get("rating"), minRating);
+            if (min == null)
+                return cb.lessThanOrEqualTo(root.get("rating"), max);
+            if (max == null)
+                return cb.greaterThanOrEqualTo(root.get("rating"), min);
 
-            return cb.between(root.get("rating"), minRating, maxRating);
+            return cb.between(root.get("rating"), min, max);
         };
     }
 }

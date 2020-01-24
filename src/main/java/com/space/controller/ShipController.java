@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,10 +45,12 @@ public class ShipController {
                                   @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
                                   @RequestParam(value = "minRating", required = false) Double minRating,
                                   @RequestParam(value = "maxRating", required = false) Double maxRating,
-                                  @RequestParam(value = "order", required = false) ShipOrder order,
-                                  @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+                                  @RequestParam(value = "order", required = false, defaultValue = "ID") ShipOrder order,
+                                  @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
+                                  @RequestParam(value = "pageSize", required = false, defaultValue = "3") Integer pageSize) {
+
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(order.getFieldName()));
+
         return shipService.getAllShips(shipService.filterByName(name)
                 .and(shipService.filterByPlanet(planet))
                 .and(shipService.filterByShipType(shipType))
@@ -72,14 +75,16 @@ public class ShipController {
                             @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
                             @RequestParam(value = "minRating", required = false) Double minRating,
                             @RequestParam(value = "maxRating", required = false) Double maxRating) {
-        return shipService.getAllShips(shipService.filterByName(name)
-                .and(shipService.filterByPlanet(planet))
-                .and(shipService.filterByShipType(shipType))
-                .and(shipService.filterByDate(after, before))
-                .and(shipService.filterByIsUsed(isUsed))
-                .and(shipService.filterBySpeed(minSpeed, maxSpeed))
-                .and(shipService.filterByCrewSize(minCrewSize, maxCrewSize))
-                .and(shipService.filterByRating(minRating, maxRating))).size();
+
+        return shipService.getAllShips(
+                Specification.where(shipService.filterByName(name)
+                        .and(shipService.filterByPlanet(planet)))
+                        .and(shipService.filterByShipType(shipType))
+                        .and(shipService.filterByDate(after, before))
+                        .and(shipService.filterByIsUsed(isUsed))
+                        .and(shipService.filterBySpeed(minSpeed, maxSpeed))
+                        .and(shipService.filterByCrewSize(minCrewSize, maxCrewSize))
+                        .and(shipService.filterByRating(minRating, maxRating))).size();
     }
 
 
@@ -88,9 +93,8 @@ public class ShipController {
     @ResponseBody
     public Ship createShip(@RequestBody Ship ship) {
         logger.info("Creating ship: " + ship);
-        shipService.createShip(ship);
-        logger.info("Ship created successfully with info: "+ ship);
-        return ship;
+        logger.info("Ship created successfully with info: " + ship);
+        return  shipService.createShip(ship);
     }
 
     @GetMapping(value = "ships/{id}")
@@ -104,19 +108,19 @@ public class ShipController {
     @DeleteMapping(value = "ships/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteShip(@PathVariable(value = "id") String id) {
-        Long idLong = Long.parseLong(id);
-        logger.info("Deleting ship with id: "+ idLong);
+        Long idLong = shipService.findId(id);
+        logger.info("Deleting ship with id: " + idLong);
         shipService.deleteShip(idLong);
         logger.info("Ship deleted successfully");
     }
 
     @PostMapping(value = "ships/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public Ship updateShip(@PathVariable(value = "id") String id, @RequestBody Ship ship) {
         logger.info("Updating ship: " + ship);
-        Long idLong = Long.parseLong(id);
-        shipService.updateShip(idLong, ship);
-        logger.info("Ship with id:"+idLong+" updated successfully with info: " + ship);
-        return ship;
+        Long idLong = shipService.findId(id);
+        logger.info("Ship with id:" + idLong + " updated successfully with info: " + ship);
+        return shipService.updateShip(idLong, ship);
     }
 
 
