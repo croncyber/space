@@ -20,23 +20,27 @@ import java.util.Date;
 import java.util.List;
 
 @Service
-@Transactional
 public class ShipServiceImpl implements ShipService {
 
 
-    @Autowired
     private ShipRepository shipRepository;
 
+
+    @Autowired
+    public void setShipRepository(ShipRepository shipRepository) {
+        this.shipRepository = shipRepository;
+    }
     // список всех сущестующих кораблей
 
+
     @Override
-    public Page<Ship> getAllShips(Specification<Ship> shipSpecification, Pageable sort) {
-        return shipRepository.findAll(shipSpecification, sort);
+    public Page<Ship> getAllShips(Specification<Ship> specification, Pageable sortedByName) {
+        return shipRepository.findAll(specification, sortedByName);
     }
 
     @Override
-    public List<Ship> getAllShips(Specification<Ship> shipSpecification) {
-        return shipRepository.findAll(shipSpecification);
+    public List<Ship> getAllShips(Specification<Ship> specification) {
+        return shipRepository.findAll(specification);
     }
 
 
@@ -81,9 +85,6 @@ public class ShipServiceImpl implements ShipService {
         if (ship.getCrewSize() != null && (ship.getCrewSize() < 1 || ship.getCrewSize() > 9999))
             throw new BadRequestException("Incorrect Ship.crewSize");
 
-        if (ship.getSpeed() == null) {
-            throw new BadRequestException("Incorrect Ship.speed");
-        }
         if (ship.getSpeed() != null && (ship.getSpeed() < 0.01D || ship.getSpeed() > 0.99D))
             throw new BadRequestException("Incorrect Ship.speed");
 
@@ -101,40 +102,41 @@ public class ShipServiceImpl implements ShipService {
         // проверка характеристик корабля
         checkShipParams(ship);
 
-        if (!shipRepository.existsById(id)) {
+        if (!shipRepository.existsById(id))
             throw new ShipNotFoundException("Ship not found");
-        }
 
 
         Ship updateShip = shipRepository.findById(id).get();
 
-        if (ship.getName() != null)
+        if(ship.getName()!=null){
             updateShip.setName(ship.getName());
-
-        if (ship.getPlanet() != null)
+        }
+        if(ship.getPlanet()!=null){
             updateShip.setPlanet(ship.getPlanet());
-
-        if (ship.getShipType() != null)
+        }
+        if(ship.getShipType()!=null){
             updateShip.setShipType(ship.getShipType());
+        }
 
-        if (ship.getProdDate() != null)
+        if(ship.getProdDate()!=null){
             updateShip.setProdDate(ship.getProdDate());
-
-        if (ship.getSpeed() != null)
-            updateShip.setSpeed(ship.getSpeed());
-
-        if (ship.getUsed() != null)
+        }
+        if(ship.getUsed()!=null){
             updateShip.setUsed(ship.getUsed());
-
-        if (ship.getCrewSize() != null)
+        }
+        if(ship.getSpeed()!=null){
+            updateShip.setSpeed(ship.getSpeed());
+        }
+        if(ship.getCrewSize()!=null){
             updateShip.setCrewSize(ship.getCrewSize());
+        }
 
         // подсчет рейтинга
         Double rating = calculateRating(updateShip);
         updateShip.setRating(rating);
 
 
-        return shipRepository.save(updateShip);
+        return shipRepository.saveAndFlush(updateShip);
     }
 
     // получение корабля по id
@@ -197,6 +199,25 @@ public class ShipServiceImpl implements ShipService {
             Date after1 = new Date(after);
             return cb.between(root.get("prodDate"), after1, before1);
         };
+
+
+//        return (Specification<Ship>) (root, query, criteriaBuilder) ->
+//        {
+//            if(after==null&&before==null){
+//                return null;
+//            }
+//            if(after==null){
+//                Date beforeDate = new Date(before);
+//                return criteriaBuilder.lessThanOrEqualTo(root.get("prodDate"),beforeDate);
+//            }
+//            if(before==null){
+//                Date afterDate = new Date(after);
+//                return criteriaBuilder.greaterThanOrEqualTo(root.get("prodDate"),afterDate);
+//            }
+//            Date beforeDate = new Date(before);
+//            Date afterDate = new Date(after);
+//            return criteriaBuilder.between(root.get("prodDate"),afterDate,beforeDate);
+//        };
     }
 
     @Override
