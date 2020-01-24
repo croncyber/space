@@ -76,6 +76,7 @@ public class ShipServiceImpl implements ShipService {
 
         Double rating = calculateRating(ship);
         ship.setRating(rating);
+        //
 
 
         return shipRepository.saveAndFlush(ship);
